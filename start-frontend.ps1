@@ -1,8 +1,8 @@
 # ============================================================
-# QueueIQ AI — Start Next.js React Dashboard Frontend
+# QueueIQ AI - Start Next.js React Dashboard Frontend
 # ============================================================
 Write-Host "==========================================================" -ForegroundColor Magenta
-Write-Host " QueueIQ AI — Next.js Operations Dashboard               " -ForegroundColor White
+Write-Host " QueueIQ AI - Next.js Operations Dashboard               " -ForegroundColor White
 Write-Host " Launching local development web server...               " -ForegroundColor Magenta
 Write-Host "==========================================================" -ForegroundColor Magenta
 

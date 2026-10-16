@@ -8,10 +8,13 @@ from backend.app.database import init_db, get_db_connection
 from backend.app.services.alert_manager import AlertManager
 from backend.app.services.queue_analytics import QueueAnalyticsEngine
 from backend.app.services.vision_engine import VisionEngine
-from backend.app.api import routes_counters, routes_live, routes_analytics, routes_alerts, routes_recommendations, routes_settings, routes_auth
+from backend.app.services.dataset_service import DatasetService
+from backend.app.api import routes_counters, routes_live, routes_analytics, routes_alerts, routes_recommendations, routes_settings, routes_auth, routes_dataset, routes_webcam
 
-# Background periodic SQLite persistence task
+# Background periodic SQLite persistence task (Only active when NOT in dataset-only mode)
 async def periodic_metrics_saver(engine: VisionEngine):
+    if settings.DATASET_ONLY_MODE:
+        return
     while True:
         try:
             await asyncio.sleep(8.0) # Every 8s save latest aggregate queue readings
@@ -36,8 +39,7 @@ async def periodic_metrics_saver(engine: VisionEngine):
                 conn.close()
         except asyncio.CancelledError:
             break
-        except Exception as e:
-            # Silently continue on DB lock or transient errors
+        except Exception:
             pass
 
 @asynccontextmanager
@@ -48,14 +50,21 @@ async def lifespan(app: FastAPI):
     alert_mgr = AlertManager(cooldown_seconds=settings.ALERT_COOLDOWN_SECONDS)
     analytics_eng = QueueAnalyticsEngine()
     vision_eng = VisionEngine(alert_manager=alert_mgr, analytics_engine=analytics_eng)
+    dataset_svc = DatasetService(alert_manager=alert_mgr)
     
     # Bind dependencies to route modules
     routes_live.vision_engine = vision_eng
     routes_alerts.alert_manager = alert_mgr
     routes_recommendations.vision_engine = vision_eng
+    routes_dataset.dataset_service = dataset_svc
+    routes_analytics.dataset_service = dataset_svc
     
-    # Auto-start demo/camera stream so UI has immediate feed
-    vision_eng.start_camera(source_type="demo")
+    if settings.DATASET_ONLY_MODE:
+        vision_eng.camera_status = "Dataset-Only Mode Active"
+        vision_eng.is_demo_mode = False
+        print("QueueIQ AI: Operating in DATASET-ONLY Mode (1GB Collective Activity Dataset).")
+    else:
+        vision_eng.start_camera(source_type="demo")
     
     bg_task = asyncio.create_task(periodic_metrics_saver(vision_eng))
     print("QueueIQ AI Backend initialized successfully.")
@@ -89,6 +98,8 @@ app.include_router(routes_alerts.router, prefix=settings.API_V1_STR)
 app.include_router(routes_recommendations.router, prefix=settings.API_V1_STR)
 app.include_router(routes_settings.router, prefix=settings.API_V1_STR)
 app.include_router(routes_auth.router, prefix=settings.API_V1_STR)
+app.include_router(routes_dataset.router, prefix=settings.API_V1_STR)
+app.include_router(routes_webcam.router, prefix=settings.API_V1_STR)
 
 @app.get("/api/health")
 def health_check():

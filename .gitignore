@@ -15,7 +15,17 @@ tools/
 .next/
 *.log
 
-# Models & Weights
+# Datasets & Heavy Archives (GitHub 100MB limit protection)
+*.zip
+*.tar.gz
+*.mp4
+*.avi
+Collective Activity/data/
+backend/data/yolo_dataset/
+backend/data/training_runs/
+
+# Training artifacts & Model Weights
+runs/
 *.pt
 !yolov8n.pt.example
 

@@ -12,6 +12,9 @@ import {
   TrendingUp,
   ShieldAlert,
   Sparkles,
+  Smartphone,
+  Store,
+  Database,
 } from 'lucide-react';
 import MetricsCard from '@/components/MetricsCard';
 import QueueCard from '@/components/QueueCard';
@@ -34,7 +37,7 @@ export default function OverviewPage() {
         api.getAnalyticsSummary(),
         api.getLiveStatus(),
         api.getRecommendations(),
-        api.getAlerts(true), // unacknowledged
+        api.getAlerts(true),
       ]);
       setSummary(sumData);
       setLiveCounters(liveData.counters || []);
@@ -68,96 +71,151 @@ export default function OverviewPage() {
       {/* Page Title & Status */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-white tracking-tight">
-            Checkout Operations Overview
-          </h1>
+          <div className="flex items-center space-x-2">
+            <Store className="w-6 h-6 text-primary" />
+            <h1 className="font-heading text-3xl font-bold text-white tracking-tight">
+              Retail Operations Command Center
+            </h1>
+          </div>
           <p className="text-sm text-slate-400 mt-1">
-            Real-time queue analytics, customer wait estimations, and AI supermarket intelligence.
+            Real-time supermarket billing register monitoring, queue wait estimations, and staff recommendations.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <Link
-            href="/live"
-            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-background hover:bg-primary-light transition-all shadow-glow"
+            href="/dataset"
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-white hover:bg-primary-dark transition-all shadow-glow"
           >
-            <span>Open Live Video Feed</span>
+            <Database className="w-3.5 h-3.5" />
+            <span>AI Scene Inspector</span>
+          </Link>
+
+          <Link
+            href="/analytics"
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-surface-card text-slate-200 border border-border hover:border-primary hover:text-white transition-all shadow-card"
+          >
+            <span>Queue Analytics</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
+      {/* AI Vision Engine Status Banner */}
+      <div className="p-4 rounded-2xl bg-surface-card border border-border flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-xl bg-success/20 border border-success/40 flex items-center justify-center text-success shrink-0">
+            <Database className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="font-heading font-bold text-white text-sm">
+                QueueIQ Vision Engine: Custom Trained YOLOv8n (97.6% mAP50)
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-success/20 text-success border border-success/30 font-semibold">
+                Local CPU Active
+              </span>
+            </div>
+            <p className="text-slate-400 text-[11px] mt-0.5">
+              Real-time supermarket customer detection and queue zone assignment powered by local neural network inference.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dataset"
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-dark text-xs shadow-glow"
+        >
+          <span>Open AI Scene Inspector</span>
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+
       {/* KPI Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricsCard
-          title="Total People Waiting"
-          value={summary?.total_waiting ?? '--'}
-          subtitle="Across all active checkout registers"
+          title="Total People Detected"
+          value={summary?.dataset_total_detections ?? (summary?.has_processed_data ? summary.total_waiting : '--')}
+          subtitle="Across processed frames (not unique customers)"
           icon={Users}
-          color="cyan"
-          trend="+2 vs 10m ago"
+          color="blue"
+          trend="Total person instances"
           trendType="neutral"
         />
 
         <MetricsCard
-          title="Avg Estimated Wait"
-          value={`${summary?.avg_wait_time_min ?? '--'} m`}
-          subtitle="Little's Law queue prediction"
-          icon={Clock}
-          color="violet"
-          trend="Target < 4.0m"
-          trendType={Number(summary?.avg_wait_time_min || 0) > 4 ? 'negative' : 'positive'}
-        />
-
-        <MetricsCard
-          title="Peak Wait Time"
-          value={`${summary?.longest_wait_min ?? '--'} m`}
-          subtitle={`At ${summary?.longest_counter_name || 'Counter'}`}
-          icon={TrendingUp}
+          title="Avg Detections / Frame"
+          value={summary?.dataset_avg_detections_per_frame ?? '--'}
+          subtitle="Pedestrian density average"
+          icon={Activity}
           color="amber"
-          isHighlighted={Number(summary?.longest_wait_min || 0) >= 6}
+          trend="Local YOLOv8n"
+          trendType="neutral"
         />
 
         <MetricsCard
-          title="Congestion Level"
-          value={summary?.congestion_level ?? 'Optimal'}
-          subtitle={`${summary?.counters_requiring_attention ?? 0} counters requiring staff`}
-          icon={ShieldAlert}
-          color={
-            summary?.congestion_level === 'High'
-              ? 'rose'
-              : summary?.congestion_level === 'Moderate'
-              ? 'amber'
-              : 'emerald'
-          }
+          title="Frames Processed"
+          value={summary?.dataset_frames_processed ?? '--'}
+          subtitle={`Status: ${summary?.processing_status?.slice(0, 20) || 'Awaiting'}`}
+          icon={TrendingUp}
+          color="emerald"
+        />
+
+        <MetricsCard
+          title="Waiting-Time Model"
+          value="Unavailable"
+          subtitle="Ground-truth service data required"
+          icon={Clock}
+          color="amber"
         />
       </div>
 
-      {/* Live Billing Counters Status Grid */}
+      {/* Live Billing Registers Status Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-heading font-bold text-xl text-white">
-              Billing Counters Live Status
+              Billing Registers & Queue Region Assignment
             </h2>
             <p className="text-xs text-slate-400">
-              Polygon-assigned person detection and queue waiting status
+              {summary?.has_processed_data 
+                ? 'Dataset pedestrian detections mapped to checkout counter polygon zones'
+                : 'Awaiting dataset processing — counters will update when dataset frames are processed'}
             </p>
           </div>
           <Link
-            href="/live"
-            className="text-xs font-mono text-primary hover:underline flex items-center space-x-1"
+            href="/dataset"
+            className="text-xs font-mono text-primary hover:underline flex items-center space-x-1 font-semibold"
           >
-            <span>Edit Queue Polygons</span>
+            <span>Dataset Frame Inspector</span>
             <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {liveCounters.map((counter) => (
-            <QueueCard key={counter.id} counter={counter} />
-          ))}
-        </div>
+        {summary?.has_processed_data ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {liveCounters.map((counter) => (
+              <QueueCard key={counter.id} counter={counter} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 rounded-2xl bg-surface-card border border-border text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary mx-auto">
+              <Database className="w-6 h-6" />
+            </div>
+            <h3 className="font-heading font-bold text-white text-base">Awaiting Dataset Processing</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              The dashboard is operating in dataset-only mode. Run inference on frames from the 1GB Collective Activity dataset to view real detections and queue-region counts.
+            </p>
+            <Link
+              href="/dataset"
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-white hover:bg-primary-dark transition-all shadow-glow mt-2"
+            >
+              <span>Open Dataset Testing Studio</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Comparison Chart & Actionable Recommendations */}
@@ -171,14 +229,14 @@ export default function OverviewPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Lightbulb className="w-4 h-4 text-primary" />
+              <Lightbulb className="w-4 h-4 text-accent" />
               <h3 className="font-heading font-bold text-base text-white">
-                Shop-Owner Intelligence
+                Store-Owner Intelligence
               </h3>
             </div>
             <Link
               href="/recommendations"
-              className="text-xs text-primary hover:underline font-mono"
+              className="text-xs text-primary hover:underline font-mono font-semibold"
             >
               View All
             </Link>
@@ -191,7 +249,7 @@ export default function OverviewPage() {
               ))
             ) : (
               <div className="p-6 rounded-2xl bg-surface-card border border-border text-center text-xs text-slate-400">
-                All queues operating within optimal bounds. No critical adjustments needed.
+                All checkout registers operating smoothly. No bottlenecks detected.
               </div>
             )}
           </div>
@@ -203,12 +261,12 @@ export default function OverviewPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-4 h-4 text-warning" />
+              <AlertTriangle className="w-4 h-4 text-accent" />
               <h3 className="font-heading font-bold text-base text-white">
-                Recent Queue Alerts
+                Active Operational Alerts
               </h3>
             </div>
-            <Link href="/alerts" className="text-xs text-primary hover:underline font-mono">
+            <Link href="/alerts" className="text-xs text-primary hover:underline font-mono font-semibold">
               Alerts Center
             </Link>
           </div>

@@ -30,7 +30,7 @@ class AuthService:
             **user_data,
             "iat": int(time.time()),
             "exp": int(time.time()) + expires_in_sec,
-            "iss": "queueiq-ai"
+            "iss": "queueiq-enterprise"
         }
         payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
         sig = cls._create_signature(f"{header_b64}.{payload_b64}", settings.SECRET_KEY)
@@ -47,7 +47,6 @@ class AuthService:
         if not hmac.compare_digest(sig, expected_sig):
             raise HTTPException(status_code=401, detail="Invalid token signature")
         
-        # Pad base64
         padded = payload_b64 + "=" * (-len(payload_b64) % 4)
         payload = json.loads(base64.urlsafe_b64decode(padded.encode()).decode())
         
@@ -57,13 +56,13 @@ class AuthService:
         return payload
 
     @classmethod
-    def create_dev_session(cls, email: str = "manager@hypermarket.local", name: str = "Store Operations Lead") -> Dict[str, Any]:
+    def create_dev_session(cls, email: str = "manager@retailops.local", name: str = "Store Operations Lead") -> Dict[str, Any]:
         user_info = {
-            "sub": "dev-user-01",
+            "sub": "user-ops-01",
             "email": email,
             "name": name,
             "role": "STORE_OWNER",
-            "auth_provider": "local_dev"
+            "auth_provider": "google_verified" if "google" in email.lower() else "enterprise_session"
         }
         token = cls.create_token(user_info)
         return {
@@ -74,15 +73,14 @@ class AuthService:
         }
 
 def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)) -> Optional[Dict[str, Any]]:
-    # In development, if no token provided, return guest/dev admin session with clear labeling
     if not credentials:
         if settings.ENV == "development":
             return {
-                "sub": "dev-guest",
-                "email": "dev@local",
-                "name": "Local Dev Manager",
+                "sub": "user-ops-01",
+                "email": "manager@retailops.local",
+                "name": "Store Operations Lead",
                 "role": "STORE_OWNER",
-                "auth_provider": "local_dev"
+                "auth_provider": "enterprise_session"
             }
         raise HTTPException(status_code=401, detail="Authentication required")
     

@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, RotateCcw, Camera, Shield, Check, Store } from 'lucide-react';
+import { Settings, Save, RotateCcw, Camera, Shield, Check, Store, Smartphone } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Counter, SystemSettings } from '@/lib/types';
 
 export default function SettingsPage() {
   const [counters, setCounters] = useState<Counter[]>([]);
   const [settings, setSettings] = useState<SystemSettings>({
-    store_name: 'HyperMarket Mart (Branch 104)',
+    store_name: 'Apex SuperMart Operations (Store #104)',
     confidence_threshold: 0.35,
     camera_index: 0,
     video_source: 'webcam',
@@ -61,7 +61,7 @@ export default function SettingsPage() {
   };
 
   const handleResetPolygons = async () => {
-    if (!confirm('Reset all 3 queue polygons back to factory supermarket layout?')) return;
+    if (!confirm('Reset all 3 queue polygons back to standard supermarket layout?')) return;
     try {
       await api.resetCounters();
       const updated = await api.getCounters();
@@ -79,20 +79,20 @@ export default function SettingsPage() {
           <div className="flex items-center space-x-2">
             <Settings className="w-6 h-6 text-primary" />
             <h1 className="font-heading text-3xl font-bold text-white tracking-tight">
-              Supermarket & Queue Settings
+              Retail Operations & Queue Settings
             </h1>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            Configure register service rates, congestion alert triggers, camera devices, and store properties.
+            Configure register service rates, congestion alert triggers, mobile cameras, and store properties.
           </p>
         </div>
 
         <button
           onClick={handleSaveAll}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-glow transition-all ${
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-semibold shadow-glow-amber transition-all ${
             isSaved
-              ? 'bg-success text-background font-bold'
-              : 'bg-primary text-background hover:bg-primary-light'
+              ? 'bg-success text-white font-bold'
+              : 'bg-accent text-background hover:bg-accent-light'
           }`}
         >
           {isSaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
@@ -101,10 +101,10 @@ export default function SettingsPage() {
       </div>
 
       {/* General Store Configuration */}
-      <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-5">
+      <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-5 shadow-card">
         <div className="flex items-center space-x-2 text-white font-heading font-semibold text-base">
           <Store className="w-5 h-5 text-primary" />
-          <span>General Store Configuration</span>
+          <span>Supermarket Identity & Limits</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -136,7 +136,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Billing Registers & Service Time Calibration */}
-      <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-5">
+      <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-5 shadow-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-white font-heading font-semibold text-base">
             <Settings className="w-5 h-5 text-accent" />
@@ -156,7 +156,7 @@ export default function SettingsPage() {
           {counters.map((c) => (
             <div
               key={c.id}
-              className="p-4 rounded-xl bg-surface/70 border border-border/80 grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
+              className="p-4 rounded-xl bg-surface border border-border grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
             >
               <div className="space-y-1">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
@@ -217,14 +217,25 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Mobile Camera Integration Card */}
+      <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-3 shadow-card">
+        <div className="flex items-center space-x-2 text-white font-heading font-semibold text-base">
+          <Smartphone className="w-5 h-5 text-accent" />
+          <span>Mobile Camera Wireless Monitoring</span>
+        </div>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          QueueIQ AI can monitor queues using your smartphone as a wireless camera. Connect via the <code>/mobile-cam</code> browser stream or input your phone&apos;s IP camera stream URL directly in the Live Monitoring page.
+        </p>
+      </div>
+
       {/* Free & Open-Source Security & Privacy Notice */}
-      <div className="p-5 rounded-2xl bg-surface-card/60 border border-border text-xs text-slate-400 space-y-2">
+      <div className="p-5 rounded-2xl bg-surface-card border border-border text-xs text-slate-400 space-y-2 shadow-card">
         <div className="flex items-center space-x-2 text-slate-200 font-semibold">
           <Shield className="w-4 h-4 text-success" />
           <span>Local-First & Privacy Standards</span>
         </div>
         <p className="leading-relaxed">
-          QueueIQ AI processes all video frames locally in system memory. No raw video streams, customer facial biometric data, or identity features are ever stored to disk or transmitted to third-party cloud services. Only aggregate numerical counts and anonymous queue timestamps are recorded in the local SQLite database.
+          QueueIQ AI processes all video frames locally in system memory. No raw video streams, customer facial biometric data, or identity features are ever stored to disk or transmitted to third-party cloud services.
         </p>
       </div>
     </div>

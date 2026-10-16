@@ -10,7 +10,7 @@ interface MetricsCardProps {
   icon: LucideIcon;
   trend?: string;
   trendType?: 'positive' | 'negative' | 'neutral';
-  color?: 'cyan' | 'violet' | 'amber' | 'emerald' | 'rose';
+  color?: 'blue' | 'amber' | 'emerald' | 'rose' | 'cyan' | 'violet';
   isHighlighted?: boolean;
 }
 
@@ -21,57 +21,58 @@ export default function MetricsCard({
   icon: Icon,
   trend,
   trendType = 'neutral',
-  color = 'cyan',
+  color = 'blue',
   isHighlighted = false,
 }: MetricsCardProps) {
-  const colorMap = {
+  const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+    blue: {
+      bg: 'bg-primary/10',
+      border: 'border-primary/40',
+      text: 'text-primary',
+      glow: 'hover:border-primary hover:shadow-glow',
+    },
     cyan: {
       bg: 'bg-primary/10',
-      border: 'border-primary/30',
+      border: 'border-primary/40',
       text: 'text-primary',
-      glow: 'hover:border-primary/50 hover:shadow-glow',
-    },
-    violet: {
-      bg: 'bg-accent/10',
-      border: 'border-accent/30',
-      text: 'text-accent',
-      glow: 'hover:border-accent/50 hover:shadow-glow-accent',
+      glow: 'hover:border-primary hover:shadow-glow',
     },
     amber: {
-      bg: 'bg-warning/10',
-      border: 'border-warning/30',
-      text: 'text-warning',
-      glow: 'hover:border-warning/50 hover:shadow-glow-amber',
+      bg: 'bg-accent/10',
+      border: 'border-accent/40',
+      text: 'text-accent',
+      glow: 'hover:border-accent hover:shadow-glow-amber',
+    },
+    violet: {
+      bg: 'bg-primary/10',
+      border: 'border-primary/40',
+      text: 'text-primary',
+      glow: 'hover:border-primary',
     },
     emerald: {
       bg: 'bg-success/10',
-      border: 'border-success/30',
+      border: 'border-success/40',
       text: 'text-success',
-      glow: 'hover:border-success/50',
+      glow: 'hover:border-success',
     },
     rose: {
       bg: 'bg-danger/10',
-      border: 'border-danger/30',
+      border: 'border-danger/40',
       text: 'text-danger',
-      glow: 'hover:border-danger/50 hover:shadow-glow-danger',
+      glow: 'hover:border-danger hover:shadow-glow-danger',
     },
   };
 
-  const scheme = colorMap[color];
+  const scheme = colorMap[color] || colorMap.blue;
 
   return (
     <div
-      className={`p-5 rounded-2xl bg-surface-card/80 border border-border transition-all duration-300 relative overflow-hidden group ${
+      className={`p-5 rounded-2xl bg-surface-card border border-border transition-all duration-200 relative overflow-hidden group shadow-card ${
         scheme.glow
-      } ${isHighlighted ? `${scheme.border} bg-surface-elevated` : ''}`}
+      } ${isHighlighted ? `${scheme.border} bg-surface-elevated shadow-glow-amber` : ''}`}
     >
-      {/* Background radial gradient accent */}
-      <div
-        className={`absolute -right-8 -bottom-8 w-24 h-24 rounded-full opacity-10 blur-xl pointer-events-none ${scheme.bg}`}
-      />
-
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans">
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-sans">
           {title}
         </span>
         <div className={`p-2.5 rounded-xl ${scheme.bg} ${scheme.text} border ${scheme.border}`}>

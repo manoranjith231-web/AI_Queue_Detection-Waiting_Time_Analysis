@@ -30,10 +30,10 @@ export const api = {
       body: JSON.stringify({ source_type, file_path }),
     }),
   stopCamera: () => fetchApi<any>('/live/stop', { method: 'POST' }),
-  switchSource: (source_type: string, file_path: string = '') =>
+  switchSource: (source_type: string, file_path: string = '', mobile_url: string = '') =>
     fetchApi<any>('/live/switch-source', {
       method: 'POST',
-      body: JSON.stringify({ source_type, file_path }),
+      body: JSON.stringify({ source_type, file_path, mobile_url }),
     }),
 
   // Counters & Polygons
@@ -81,4 +81,59 @@ export const api = {
       body: JSON.stringify({ name, email }),
     }),
   getSession: () => fetchApi<any>('/auth/session'),
+
+  // Dataset Testing
+  getDatasetOverview: () => fetchApi<any>('/dataset/overview'),
+  getDatasetSequences: () => fetchApi<any[]>('/dataset/sequences'),
+  resetDatasetProcessing: () => fetchApi<any>('/dataset/reset', { method: 'POST' }),
+  startDatasetProcessing: (sequence_name: string, sampling_rate: number = 2, conf_threshold: number = 0.35) =>
+    fetchApi<any>('/dataset/start', {
+      method: 'POST',
+      body: JSON.stringify({ sequence_name, sampling_rate, conf_threshold, force_restart: true }),
+    }),
+  pauseDatasetProcessing: () => fetchApi<any>('/dataset/pause', { method: 'POST' }),
+  resumeDatasetProcessing: () => fetchApi<any>('/dataset/resume', { method: 'POST' }),
+  stopDatasetProcessing: () => fetchApi<any>('/dataset/stop', { method: 'POST' }),
+  getDatasetProgress: () => fetchApi<any>('/dataset/progress'),
+  getDatasetSummary: () => fetchApi<any>('/dataset/summary'),
+  getDatasetModels: () => fetchApi<any>('/dataset/models'),
+  switchDatasetModel: (model_type: string) =>
+    fetchApi<any>('/dataset/switch-model', {
+      method: 'POST',
+      body: JSON.stringify({ model_type }),
+    }),
+  getFrameInfo: (sequence_name?: string, frame_index?: number, conf_threshold?: number) => {
+    const params = new URLSearchParams();
+    if (sequence_name) params.append('sequence_name', sequence_name);
+    if (frame_index) params.append('frame_index', frame_index.toString());
+    if (conf_threshold) params.append('conf_threshold', conf_threshold.toString());
+    return fetchApi<any>(`/dataset/frame-info?${params.toString()}`);
+  },
+  getWebcamStatus: () => fetchApi<any>('/webcam/status'),
+  getDefaultWebcamZones: () => fetchApi<any>('/webcam/default-zones'),
+  resetWebcamState: () => fetchApi<any>('/webcam/reset', { method: 'POST' }),
+  switchWebcamModel: (model_type: string) =>
+    fetchApi<any>('/webcam/switch-model', {
+      method: 'POST',
+      body: JSON.stringify({ model_type }),
+    }),
+  detectWebcamFrame: (
+    imageBase64: string,
+    confThreshold: number = 0.35,
+    zones: any[] = [],
+    modelType: string = 'pretrained',
+    avgServiceTimeSec: number = 90,
+    activeCounters: number = 3
+  ) =>
+    fetchApi<any>('/webcam/detect', {
+      method: 'POST',
+      body: JSON.stringify({
+        image_base64: imageBase64,
+        conf_threshold: confThreshold,
+        zones: zones,
+        model_type: modelType,
+        avg_service_time_sec: avgServiceTimeSec,
+        active_counters: activeCounters,
+      }),
+    }),
 };

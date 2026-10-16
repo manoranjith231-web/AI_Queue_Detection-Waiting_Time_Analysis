@@ -6,7 +6,9 @@ from backend.app.config import settings
 
 def get_db_connection() -> sqlite3.Connection:
     os.makedirs(os.path.dirname(settings.DATABASE_PATH), exist_ok=True)
-    conn = sqlite3.connect(settings.DATABASE_PATH)
+    conn = sqlite3.connect(settings.DATABASE_PATH, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout = 30000;")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -90,10 +92,64 @@ def init_db() -> None:
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    # 6. Real Dataset Processing Runs
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS dataset_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT UNIQUE NOT NULL,
+        sequence_name TEXT NOT NULL,
+        sampling_rate INTEGER NOT NULL DEFAULT 1,
+        total_frames INTEGER NOT NULL DEFAULT 0,
+        processed_frames INTEGER NOT NULL DEFAULT 0,
+        total_detections INTEGER NOT NULL DEFAULT 0,
+        avg_detections_per_frame REAL DEFAULT 0.0,
+        avg_confidence REAL DEFAULT 0.0,
+        avg_inference_ms REAL DEFAULT 0.0,
+        precision REAL DEFAULT 0.0,
+        recall REAL DEFAULT 0.0,
+        f1_score REAL DEFAULT 0.0,
+        true_positives INTEGER DEFAULT 0,
+        false_positives INTEGER DEFAULT 0,
+        false_negatives INTEGER DEFAULT 0,
+        error_count INTEGER DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'IDLE',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # 7. Real Dataset Frame Results
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS dataset_frame_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id TEXT NOT NULL,
+        sequence_name TEXT NOT NULL,
+        frame_index INTEGER NOT NULL,
+        frame_name TEXT NOT NULL,
+        person_count INTEGER NOT NULL,
+        confidences TEXT,
+        bboxes TEXT,
+        ground_truth_count INTEGER DEFAULT 0,
+        ground_truth_boxes TEXT,
+        tp_count INTEGER DEFAULT 0,
+        fp_count INTEGER DEFAULT 0,
+        fn_count INTEGER DEFAULT 0,
+        inference_ms REAL DEFAULT 0.0,
+        counter_counts TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (run_id) REFERENCES dataset_runs(run_id) ON DELETE CASCADE
+    );
+    """)
     
     conn.commit()
     seed_default_counters(conn)
-    seed_initial_analytics_if_empty(conn)
+    if settings.DATASET_ONLY_MODE:
+        # Enforce Dataset-Only Mode: remove synthetic simulated measurements
+        cursor.execute("DELETE FROM queue_measurements WHERE is_simulated = 1")
+        conn.commit()
+    else:
+        seed_initial_analytics_if_empty(conn)
     conn.close()
 
 def seed_default_counters(conn: sqlite3.Connection) -> None:

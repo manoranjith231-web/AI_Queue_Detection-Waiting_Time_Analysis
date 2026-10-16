@@ -28,7 +28,7 @@ export default function RootLayout({
 
   const [unreadAlerts, setUnreadAlerts] = useState<number>(0);
 
-  // Poll live telemetry periodically
+  // Poll live telemetry every 3 seconds
   useEffect(() => {
     let mounted = true;
     const fetchStatus = async () => {
@@ -43,8 +43,8 @@ export default function RootLayout({
             isSimulated: Boolean(status.is_simulated),
           });
         }
-      } catch (err) {
-        // Backend warming up
+      } catch {
+        // Backend warming up — ignore silently
       }
     };
 
@@ -63,7 +63,7 @@ export default function RootLayout({
       setTelemetry((prev) => ({
         ...prev,
         isSimulated: nextSource === 'demo',
-        cameraStatus: nextSource === 'webcam' ? 'Connected (Webcam)' : 'Demo Mode',
+        cameraStatus: nextSource === 'webcam' ? 'Webcam Active' : 'Demo Mode (Simulated)',
       }));
     } catch (err) {
       console.error('Failed to toggle source:', err);
@@ -76,10 +76,11 @@ export default function RootLayout({
         <title>QueueIQ AI — Intelligent Supermarket Queue Monitoring</title>
         <meta
           name="description"
-          content="Real-time supermarket billing counter queue monitoring, computer vision person tracking, waiting-time analytics, and shop-owner intelligence."
+          content="Real-time supermarket billing counter queue monitoring using computer vision person tracking, waiting-time analytics, and AI-powered staff recommendations."
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-primary selection:text-background">
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-primary selection:text-white">
         <Navbar
           isSimulated={telemetry.isSimulated}
           fps={telemetry.fps}
@@ -95,7 +96,7 @@ export default function RootLayout({
 
         <div className="flex-1 flex overflow-hidden">
           <Sidebar unreadAlerts={unreadAlerts} />
-          <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-gradient-to-b from-surface/30 to-background">
+          <main className="flex-1 overflow-y-auto p-5 md:p-7 bg-gradient-to-b from-surface/20 to-background">
             {children}
           </main>
         </div>

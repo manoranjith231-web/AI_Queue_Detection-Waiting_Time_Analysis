@@ -1,12 +1,44 @@
 # QueueIQ AI — Intelligent Supermarket Queue Monitoring & Waiting-Time Analytics
 
-[![100% Free & Open Source](https://img.shields.io/badge/Stack-100%25%20Free%20%26%20Open--Source-brightgreen)](#free-tool-inventory)
+[![100% Free & Open Source](https://img.shields.io/badge/Stack-100%25%20Free%20%26%20Open--Source-brightgreen)](#1-free-tool-inventory-strict-free-tools-compliance)
 [![Runs on Windows CPU](https://img.shields.io/badge/Hardware-Windows%20CPU%20(No%20GPU%20Required)-blue)](#hardware-requirements)
 [![YOLOv8 Object Tracking](https://img.shields.io/badge/AI%20Vision-YOLOv8%20Nano%20%2B%20Centroid%20Tracking-cyan)](#computer-vision-engine)
 [![Local-First Database](https://img.shields.io/badge/Database-SQLite%20(Local%20First)-purple)](#database--storage)
-[![Privacy Preserving](https://img.shields.io/badge/Privacy-Zero%20Biometrics%20%2F%20No%20Facial%20Rec-emerald)](#privacy--security)
+[![Privacy Preserving](https://img.shields.io/badge/Privacy-Zero%20Biometrics%20%2F%20No%20Facial%20Rec-emerald)](#privacy--security-guarantees)
+[![Test Suite Passed](https://img.shields.io/badge/Tests-17%2F17%20Passed%20(100%25)-success)](#verification--automated-test-suite)
 
-**QueueIQ AI** is a production-grade, local-first intelligent supermarket queue monitoring and waiting-time analytics platform. Engineered specifically for competitive hackathons and practical retail deployment, it monitors billing counters in real time using a standard laptop webcam or video feed, tracks customers without invading privacy, predicts customer waiting times using Little's Law, and generates deterministic rules-based recommendations for supermarket owners.
+**QueueIQ AI** is a production-grade, local-first intelligent supermarket queue monitoring and waiting-time analytics platform. Engineered for competitive retail hackathons and practical store operations, it monitors checkout counters in real time using laptop webcams, wireless smartphone cameras, or surveillance video feeds, tracks shoppers without collecting biometrics, predicts waiting times using Little's Law, and generates deterministic actionable recommendations for supermarket store owners.
+
+---
+
+## Architecture Overview
+
+```
+                   ┌────────────────────────────────────────┐
+                   │        Video Input Channels           │
+                   │  (Laptop Webcam / Phone Cam / Dataset) │
+                   └───────────────────┬────────────────────┘
+                                       │
+                                       ▼
+                   ┌────────────────────────────────────────┐
+                   │    FastAPI Python Vision Engine (CPU)  │
+                   │  • YOLOv8 Person Detection (Class 0)   │
+                   │  • Ground-Anchor Foot Tracking (x, y)  │
+                   │  • Ray-Casting Polygon Zone Assignment │
+                   │  • Little's Law Wait-Time Calculation  │
+                   │  • 45s Cooldown Alert Deduplication    │
+                   └───────────────────┬────────────────────┘
+                                       │
+                        ┌──────────────┴──────────────┐
+                        ▼                             ▼
+       ┌───────────────────────────────┐  ┌───────────────────────────────┐
+       │   Local SQLite Database       │  │   Next.js 14 React Dashboard  │
+       │   • Counter Configurations    │  │   • Live MJPEG Stream & Polys │
+       │   • Historical Hourly Stats   │  │   • Dataset Video Testing     │
+       │   • Rules-Based Insights      │  │   • Smartphone Camera Stream  │
+       │   • Alert Incident Logs       │  │   • Deep Trend Charts (Area)  │
+       └───────────────────────────────┘  └───────────────────────────────┘
+```
 
 ---
 
@@ -17,165 +49,177 @@ QueueIQ AI requires **zero paid cloud subscriptions, zero paid APIs, and zero su
 | Layer | Free & Open-Source Technology | License / Pricing |
 |---|---|---|
 | **AI Computer Vision** | Ultralytics YOLOv8 Nano (`yolov8n.pt`) | AGPL-3.0 / 100% Free Open Source |
-| **Video Processing** | OpenCV Python (`opencv-python`) | Apache 2.0 / 100% Free |
-| **Object Tracking** | Centroid & IoU Persistent Tracking | Custom Local Python / 100% Free |
-| **Backend REST & WS** | FastAPI + Uvicorn | MIT / 100% Free |
+| **Video Processing** | OpenCV Python (`opencv-python-headless`) | Apache 2.0 / 100% Free |
+| **Object Tracking** | Centroid & IoU Persistent Multi-Object Tracking | Custom Local Python / 100% Free |
+| **Backend REST & WS** | FastAPI + Uvicorn Async Server | MIT / 100% Free |
 | **Frontend Framework**| Next.js 14 App Router + React 18 | MIT / 100% Free |
 | **Language & Types**  | TypeScript + Python 3.12 | Open Source / 100% Free |
 | **Styling & UI**      | Tailwind CSS + Lucide React + Glassmorphism | MIT / 100% Free |
-| **Analytics Charts**  | Recharts (Area, Bar, Multi-Metric) | MIT / 100% Free |
+| **Analytics Charts**  | Recharts (Area, Bar, Multi-Metric Comparative) | MIT / 100% Free |
 | **Local Database**    | SQLite 3 (`backend/data/queueiq.db`) | Public Domain / 100% Free |
-| **Authentication**    | Local-first Signed JWT + Optional Google OAuth | MIT / Zero Cost Local Code |
+| **Authentication**    | Local Signed JWT (HMAC-SHA256) | MIT / Zero Cost Local Code |
 
 ---
 
-## 2. Benchmark Video Dataset Integration: Collective Activity Dataset
+## 2. Key Pages & Features
 
-QueueIQ AI includes native support for the **[Collective Activity Video Dataset](https://hyper.ai/en/datasets/5240)**.
+### 1. Operations Overview Dashboard (`/`)
+- **Real-Time KPIs:** Total shoppers waiting, store average queue time, peak queue delay, and store congestion status.
+- **Active Checkout Grid:** Counter 1 (Express), Counter 2 (Standard Baskets), and Counter 3 (Bulk Trolleys).
+- **Queue Comparison Chart:** Live balance visualizer comparing shoppers across all open registers.
+- **Shop-Owner Intelligence:** High-priority recommendations for floor managers.
 
-The Collective Activity Dataset contains real-world surveillance video sequences of collective group dynamics, specifically containing labeled **"queuing"**, **"waiting"**, and **"walking"** human interactions recorded with consumer handheld cameras.
-
-### How QueueIQ AI Ingests the Dataset:
-1. Place any video sequence from the dataset (or custom supermarket CCTV clip) into `backend/videos/queue_sample.mp4`.
-2. On the **Live Monitoring** page or via API:
-   ```json
-   POST /api/live/switch-source
-   {
-     "source_type": "file",
-     "file_path": "backend/videos/queue_sample.mp4"
-   }
-   ```
-3. The Vision Engine loops through the queuing sequence, assigns bounding boxes to the configured counter polygons, and logs empirical customer throughput!
-
----
-
-## 3. Quickstart: Windows Setup & Commands
-
-All commands are executed in Windows PowerShell without requiring administrative privileges.
-
-### Step 1: Clone or Navigate to Project
-```powershell
-cd c:\Users\Manoranjith\Desktop\hackzen2.0
-```
-
-### Step 2: Start the Python AI Backend
-```powershell
-.\start-backend.ps1
-```
-*Alternatively, manual commands:*
-```powershell
-$env:PYTHONPATH = (Get-Location).Path
-.\backend_venv\Scripts\python.exe backend\run_backend.py
-```
-> The backend server will initialize SQLite tables, load YOLOv8n on CPU, and listen on **`http://127.0.0.1:8000`**.  
-> Interactive OpenAPI documentation is available at **`http://127.0.0.1:8000/docs`**.
-
-### Step 3: Start the Next.js Frontend Dashboard
-Open a new PowerShell terminal:
-```powershell
-cd c:\Users\Manoranjith\Desktop\hackzen2.0
-.\start-frontend.ps1
-```
-*Alternatively, manual commands:*
-```powershell
-$env:PATH = "$PSScriptRoot\tools\node;$env:PATH"
-cd frontend
-npm run dev
-```
-> Open your browser to **`http://localhost:3000`** to access the dashboard!
-
----
-
-## 4. Key Pages & Features
-
-### 1. Overview Dashboard (`/`)
-- **KPI Metrics:** Total People Waiting, Average Estimated Wait Time, Peak Wait Time, and Store Congestion Level.
-- **Live Register Grid:** Counter 1 (Express), Counter 2 (Standard Baskets), and Counter 3 (Bulk Trolley).
-- **Queue Comparison Chart:** Real-time load balance comparison.
-- **Shop-Owner Recommendations:** Top urgent staffing and queue rebalancing advice.
-
-### 2. Live Monitoring & Interactive Polygon Editor (`/live`)
-- **Live Video Feed:** Real-time 640x480 video with bounding boxes and track IDs.
+### 2. Live Retail Vision Monitoring (`/live`)
+- **Live Video Feed:** Real-time stream with bounding boxes, tracking IDs, and ground anchor foot markers.
 - **Interactive Polygon Canvas:** Store managers can **click and drag vertex nodes 1–4** on the video to reshape queue zones to match their physical counter layout.
 - **Ground-Anchor Feet Point:** Tracks where the customer's feet touch the supermarket floor tiles $(X_{\text{mid}}, Y_{\text{bottom}})$, eliminating false positives from customers browsing adjacent aisles.
 - **Hardware Telemetry:** Live FPS (15+ FPS), inference latency (<70ms on CPU), model status, and camera state.
 
-### 3. Deep Analytics & CSV Export (`/analytics`)
-- **Hourly Queue Trends (Area Chart):** Shows customer volume across counters over the last 6, 12, or 24 hours.
-- **Customer Wait Time History (Bar Chart):** Compares delays.
-- **Historical Peak Congestion Periods:** Highlights peak lunch (12pm–2pm) and evening (5pm–8pm) supermarket rushes.
-- **CSV Dataset Export:** Instant direct download of SQLite historical aggregate measurements.
+### 3. AI Scene Inspector & Dataset Testing Studio (`/dataset`)
+- **Curated Supermarket Scenes:** 6 pre-configured retail scenarios (Express Lane, Main Lanes, Entrance Flow, Service Desk, Peak Congestion, Self-Checkout Generalization).
+- **Interactive Video Player:**
+  - **Play Video / Pause Video** with sequential frame delivery (zero dropped frames).
+  - **Speed Selector:** Normal `1x`, Fast `2x`, Slow `0.5x`.
+  - **Loop Toggle:** Continuous video sequence looping.
+  - **Scrubber Bar & Step Navigation:** Scrub through frames with sub-10ms cached preview.
+- **Honest Ground-Truth Benchmarking:** Calculates genuine Precision, Recall, and F1 scores against the 1.02GB Collective Activity surveillance dataset.
+- **CSV Detections Export:** Instant direct download of frame-by-frame customer counts and bounding boxes.
 
-### 4. Shop-Owner Intelligence (`/recommendations`)
+### 4. Smartphone Camera Streaming (`/mobile-cam`)
+- **No App Installation Required:** Turn any Android phone or iPhone into a retail CCTV monitoring station simply by opening `/mobile-cam` in the phone's mobile browser.
+- **Auto-Mirror & High-FPS Canvas:** Captures and streams frames over Wi-Fi directly into the QueueIQ AI computer vision pipeline.
+
+### 5. Laptop Webcam Monitoring (`/webcam`)
+- **Instant Local Hardware Connection:** Stream directly from built-in or USB webcams with real-time person detection and interactive checkout boundary overlay.
+
+### 6. Deep Analytics & Reports (`/analytics`)
+- **Hourly Queue Trends (Area Chart):** Shopper volume across counters over 6, 12, or 24 hours.
+- **Wait Time History (Bar Chart):** Compares delays across checkout categories.
+- **Peak Congestion Windows:** Highlights peak lunch (12pm–2pm) and evening (5pm–8pm) supermarket rushes.
+- **CSV Aggregate Export:** One-click CSV download of all historical queue records.
+
+### 7. Recommendations Engine (`/recommendations`)
 - Rules-based, transparent decision support:
   - *Severe Queue Imbalance:* Directs shoppers from slow to fast counters.
   - *Counter Overload:* Recommends deploying secondary baggers or opening auxiliary registers.
   - *Camera Tail Cutoff:* Warns when shoppers stand near the frame boundary, suggesting camera tilt adjustment.
 
-### 5. Alerts Center (`/alerts`)
+### 8. Alerts Center (`/alerts`)
 - Tracks congestion spikes, camera disconnection, and queue overruns.
 - Features **45-second deduplication cooldowns** to prevent alert spamming.
 - Audit trail with **Acknowledge** and **Resolve** action buttons.
 
-### 6. Supermarket Settings (`/settings`)
-- Configurable store name, counter service times, congestion thresholds, and alert cooldown intervals.
-- Factory reset button to restore default supermarket polygon geometry.
+---
+
+## 3. Quickstart & Installation
+
+### Option A: One-Click Launcher (Recommended for Windows)
+
+Simply execute the root launcher script in PowerShell:
+```powershell
+.\START.ps1
+```
+This script will:
+1. Start the Python FastAPI backend on `http://127.0.0.1:8000`.
+2. Start the Next.js development server on `http://localhost:3000`.
+3. Automatically launch your default browser to the Dashboard.
 
 ---
 
-## 5. Waiting-Time Mathematical Model
+### Option B: Manual Step-by-Step Setup
 
-Unlike systems that invent arbitrary numbers, QueueIQ AI implements Little's Law:
+#### Prerequisites
+- Windows 10/11 (or Linux/macOS)
+- Python 3.10+
+- Node.js 18+
+
+#### 1. Setup Python Backend
+```powershell
+# Create and activate virtual environment
+python -m venv backend_venv
+.\backend_venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install fastapi uvicorn opencv-python-headless ultralytics numpy pytest httpx
+
+# Run the backend
+$env:PYTHONPATH = (Get-Location).Path
+python backend\run_backend.py
+```
+*The FastAPI backend will start on **`http://127.0.0.1:8000`** with OpenAPI docs at **`http://127.0.0.1:8000/docs`**.*
+
+#### 2. Setup Next.js Frontend
+In a second terminal:
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+*Open **`http://localhost:3000`** in your browser.*
+
+---
+
+## 4. Benchmark Dataset: Collective Activity Dataset
+
+QueueIQ AI includes full integration with the **[Collective Activity Video Dataset](https://hyper.ai/en/datasets/5240)** (Wongun Choi, Khuram Shahid, Silvio Savarese, 2009).
+
+- **44 Surveillance Sequences:** Containing 25,756 sequential video frames.
+- **Ground-Truth Labeled Interactions:**
+  1. Crossing
+  2. Walking
+  3. Waiting (Queue-relevant)
+  4. Talking
+  5. Queueing (Queue-relevant)
+  6. Other
+- **In-Memory Frame Caching:** Sub-10ms random frame access with accelerated LRU cache.
+
+---
+
+## 5. Mathematical Waiting-Time Model (Little's Law)
+
+Rather than generating arbitrary numbers, QueueIQ AI implements Little's Law:
 
 $$W_c = N_{\text{ahead}} \times S_{\text{eff}}$$
 
 Where:
-- $N_{\text{ahead}} = \max(0, P_c - 1)$ (the customer at the register is already in service).
+- $N_{\text{ahead}} = \max(0, P_c - 1)$ (the shopper currently at the register is already being served).
 - $S_{\text{eff}}$ is the **Effective Service Time** in seconds per customer.
-- **Configured Mode:** Uses baseline assumptions ($90\text{s}$ Express, $135\text{s}$ Standard, $180\text{s}$ Bulk).
-- **Empirical Calibrated Mode:** Automatically calculated from timestamped customer departure intervals ($\Delta t$) once $\ge 6$ checkouts are completed.
+- **Configured Mode:** Baseline assumptions ($90\text{s}$ Express, $135\text{s}$ Standard, $180\text{s}$ Bulk).
+- **Empirical Calibrated Mode:** Calculated from timestamped customer departure intervals ($\Delta t$) once $\ge 6$ checkouts are completed.
 
-Read the complete mathematical derivation in [WAITING_TIME_FORMULA.md](file:///c:/Users/Manoranjith/Desktop/hackzen2.0/docs/WAITING_TIME_FORMULA.md).
+Read the full mathematical derivation in [docs/WAITING_TIME_FORMULA.md](docs/WAITING_TIME_FORMULA.md).
 
 ---
 
 ## 6. Privacy & Security Guarantees
 
-- **Zero Biometrics:** Only COCO Class 0 (`person`) bounding boxes are detected. No facial landmarks, biometric templates, or identity data.
-- **In-Memory Frame Processing:** Raw webcam frames are processed strictly in volatile RAM and never written to disk.
-- **Local-First Database:** SQLite stores only aggregate numbers (`people_count`, `wait_time_sec`).
-- **Local JWT Authentication:** Signed tokens using HMAC-SHA256 for store manager access.
-- **Optional Google OAuth:** Ready for configuration with Google Cloud Console Client ID.
+- **Zero Biometrics:** Only COCO Class 0 (`person`) bounding boxes are detected. No facial landmarks, biometric templates, or identity data are ever captured.
+- **In-Memory Frame Processing:** Raw camera frames are processed strictly in volatile RAM and never saved to persistent storage.
+- **Local-First Database:** SQLite stores aggregate numbers only (`people_count`, `wait_time_sec`).
+- **Local JWT Authentication:** HMAC-SHA256 signed access tokens for store manager actions.
 
-Read full details in [SECURITY.md](file:///c:/Users/Manoranjith/Desktop/hackzen2.0/docs/SECURITY.md).
+Read full details in [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
 ## 7. Verification & Automated Test Suite
 
-All 13 unit and integration tests pass with 100% success:
+All 17 unit and integration tests pass with 100% success:
 
 ```powershell
 .\backend_venv\Scripts\python.exe -m pytest backend/tests
 ```
 
-**Test Results:**
-- `test_polygon.py`: Point-in-polygon math, non-convex boundaries, ground-anchor foot mapping (**Passed**)
-- `test_queue_analytics.py`: Little's law waiting time, rolling window smoothing, congestion scores (**Passed**)
-- `test_recommendations.py`: Overload detection, queue rebalancing recommendations (**Passed**)
-- `test_alerts.py`: Cooldown deduplication, suppression of duplicate triggers (**Passed**)
-- `test_api.py`: FastAPI health, counters CRUD, analytics summary, dev authentication (**Passed**)
-
-Frontend Production Build:
-```powershell
-cd frontend
-$env:PATH = "C:\Users\Manoranjith\Desktop\hackzen2.0\tools\node;" + $env:PATH
-npm run build
-```
-- **Result:** `✓ Compiled successfully`, `✓ Generating static pages (10/10)`, `Exit Code: 0`.
+**Test Coverage Summary:**
+- `test_dataset.py`: Dataset overview, sequence listing, frame analysis, and single-frame JPEG extraction (**4/4 Passed**)
+- `test_polygon.py`: Point-in-polygon math, non-convex boundaries, ground-anchor foot mapping (**3/3 Passed**)
+- `test_queue_analytics.py`: Little's law waiting time, rolling window smoothing, congestion scores (**3/3 Passed**)
+- `test_recommendations.py`: Overload detection, queue rebalancing recommendations (**2/2 Passed**)
+- `test_alerts.py`: Cooldown deduplication, suppression of duplicate triggers (**1/1 Passed**)
+- `test_api.py`: FastAPI health, counters CRUD, analytics summary, dev authentication (**4/4 Passed**)
 
 ---
 
-## 8. License & Hackathon Notice
+## 8. License & Notice
 
-Developed for HackZen 2.0. Distributed under the MIT Open Source License. Ultralytics YOLOv8 is subject to the AGPL-3.0 license.
+Distributed under the **MIT License**. Ultralytics YOLOv8 is subject to the AGPL-3.0 license. Developed for HackZen 2.0.

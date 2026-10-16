@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Clock, Gauge, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Users, Clock, Gauge, AlertTriangle, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { LiveCounterStatus } from '@/lib/types';
 
 interface QueueCardProps {
@@ -14,32 +14,37 @@ export default function QueueCard({ counter }: QueueCardProps) {
 
   return (
     <div
-      className={`p-5 rounded-2xl bg-surface-card border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+      className={`p-5 rounded-2xl bg-surface-card border transition-all duration-200 relative overflow-hidden flex flex-col justify-between shadow-card ${
         isCritical
-          ? 'border-danger/60 shadow-glow-danger bg-danger/5'
+          ? 'border-danger/70 shadow-glow-danger bg-danger/5'
           : isCongested
-          ? 'border-warning/60 shadow-glow-amber bg-warning/5'
-          : 'border-border hover:border-slate-700'
+          ? 'border-accent/70 shadow-glow-amber bg-accent/5'
+          : 'border-border hover:border-border-light'
       }`}
     >
       {/* Top Bar: Code, Category, Congestion Badge */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           <span
-            className="w-3 h-3 rounded-full shrink-0"
-            style={{ backgroundColor: counter.color || '#06B6D4' }}
+            className="w-3.5 h-3.5 rounded-full shrink-0"
+            style={{ backgroundColor: counter.color || '#2874F0' }}
           />
-          <span className="font-heading font-bold text-white text-base">
-            {counter.name}
-          </span>
+          <div>
+            <span className="font-heading font-bold text-white text-base block">
+              {counter.name}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">
+              {counter.category} Register
+            </span>
+          </div>
         </div>
 
         <span
-          className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
+          className={`text-[11px] font-mono px-2.5 py-0.5 rounded-full border font-semibold ${
             isCritical
               ? 'bg-danger/20 text-danger border-danger/40 animate-pulse'
               : isCongested
-              ? 'bg-warning/20 text-warning border-warning/40'
+              ? 'bg-accent/20 text-accent border-accent/40'
               : 'bg-success/20 text-success border-success/40'
           }`}
         >
@@ -47,11 +52,11 @@ export default function QueueCard({ counter }: QueueCardProps) {
         </span>
       </div>
 
-      {/* Main Metrics: People & Wait Time */}
-      <div className="grid grid-cols-2 gap-4 my-5 py-3 border-y border-border/50">
-        {/* People Count */}
+      {/* Main Metrics: Shoppers & Estimated Wait Time */}
+      <div className="grid grid-cols-2 gap-4 my-5 py-3.5 border-y border-border/70 bg-surface/50 rounded-xl px-3">
+        {/* Shoppers Count */}
         <div className="space-y-1">
-          <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+          <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium">
             <Users className="w-3.5 h-3.5 text-primary" />
             <span>Shoppers in Line</span>
           </div>
@@ -59,7 +64,7 @@ export default function QueueCard({ counter }: QueueCardProps) {
             <span className="text-3xl font-heading font-bold text-white">
               {counter.people_count}
             </span>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-xs text-slate-400 font-mono">
               ({counter.people_ahead} ahead)
             </span>
           </div>
@@ -67,7 +72,7 @@ export default function QueueCard({ counter }: QueueCardProps) {
 
         {/* Estimated Waiting Time */}
         <div className="space-y-1">
-          <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+          <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium">
             <Clock className="w-3.5 h-3.5 text-accent" />
             <span>Est. Wait Time</span>
           </div>
@@ -83,35 +88,35 @@ export default function QueueCard({ counter }: QueueCardProps) {
       {/* Calibration & Service Speed Footer */}
       <div className="space-y-2 text-[11px] text-slate-400">
         <div className="flex justify-between items-center">
-          <span className="flex items-center space-x-1">
-            <Gauge className="w-3 h-3 text-slate-500" />
-            <span>Avg Service Rate:</span>
+          <span className="flex items-center space-x-1.5">
+            <Gauge className="w-3 h-3 text-slate-400" />
+            <span>Scan Rate:</span>
           </span>
-          <span className="font-mono text-slate-200">
-            {counter.avg_service_time_sec}s / customer
+          <span className="font-mono text-slate-200 font-semibold">
+            {counter.avg_service_time_sec}s / shopper
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="flex items-center space-x-1">
-            <ShieldCheck className="w-3 h-3 text-slate-500" />
-            <span>Formula Status:</span>
+          <span className="flex items-center space-x-1.5">
+            <ShieldCheck className="w-3 h-3 text-slate-400" />
+            <span>Estimation Mode:</span>
           </span>
           <span
-            className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+            className={`font-mono text-[10px] px-2 py-0.5 rounded font-semibold ${
               counter.is_calibrated
-                ? 'bg-success/15 text-success'
+                ? 'bg-success/20 text-success'
                 : 'bg-surface-elevated text-slate-300'
             }`}
           >
-            {counter.is_calibrated ? 'Empirical Calibrated' : 'Configured Assumption'}
+            {counter.is_calibrated ? 'Empirical Calibrated' : 'Configured Standard'}
           </span>
         </div>
 
         {counter.boundary_alert && (
-          <div className="pt-2 flex items-center space-x-1 text-warning text-[10px]">
-            <AlertTriangle className="w-3 h-3 shrink-0" />
-            <span>Shoppers detected near frame boundary. Queue tail may extend out of view.</span>
+          <div className="pt-2 flex items-center space-x-1.5 text-accent text-[10px] font-medium">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span>Customer detected near frame edge. Queue tail may extend out of camera range.</span>
           </div>
         )}
       </div>

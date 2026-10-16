@@ -1,8 +1,8 @@
 # ============================================================
-# QueueIQ AI — Start Python Computer Vision Backend
+# QueueIQ AI - Start Python Computer Vision Backend
 # ============================================================
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host " QueueIQ AI — Intelligent Supermarket Queue Monitoring" -ForegroundColor White
+Write-Host " QueueIQ AI - Intelligent Supermarket Queue Monitoring" -ForegroundColor White
 Write-Host " Starting Python Computer Vision & FastAPI Backend...   " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 

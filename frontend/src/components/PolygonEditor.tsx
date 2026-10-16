@@ -18,7 +18,6 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
   const [saveSuccess, setSaveSuccess] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync counters when loaded
   useEffect(() => {
     const map: Record<number, [number, number][]> = {};
     counters.forEach((c) => {
@@ -80,7 +79,7 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
   };
 
   const handleResetDefaults = async () => {
-    if (!confirm('Reset all 3 queue polygons back to factory supermarket layout?')) return;
+    if (!confirm('Reset all 3 queue polygons back to standard retail layout?')) return;
     try {
       await api.resetCounters();
       onCountersUpdated();
@@ -90,7 +89,7 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
   };
 
   return (
-    <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-6">
+    <div className="p-6 rounded-2xl bg-surface-card border border-border space-y-6 shadow-card">
       {/* Header and Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -111,15 +110,15 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
             <button
               key={c.id}
               onClick={() => setSelectedCounterId(c.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
                 selectedCounterId === c.id
-                  ? 'bg-primary/20 text-primary border border-primary/40 font-semibold'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <span
                 className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: c.color || '#06B6D4' }}
+                style={{ backgroundColor: c.color || '#2874F0' }}
               />
               <span>{c.name.split('(')[0]}</span>
             </button>
@@ -134,14 +133,12 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
         onMouseUp={handleMouseUp}
         className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-border select-none cursor-crosshair group"
       >
-        {/* Underneath Live MJPEG Stream */}
         <img
           src="http://127.0.0.1:8000/api/live/stream"
           alt="Queue Monitoring Stream"
           className="w-full h-full object-contain pointer-events-none"
         />
 
-        {/* SVG Overlay for Polygons and Nodes */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           {counters.map((c) => {
             const poly = editPolygons[c.id] || [];
@@ -155,9 +152,9 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
               <polygon
                 key={c.id}
                 points={pointsString}
-                fill={c.color || '#06B6D4'}
-                fillOpacity={isSelected ? 0.25 : 0.08}
-                stroke={c.color || '#06B6D4'}
+                fill={c.color || '#2874F0'}
+                fillOpacity={isSelected ? 0.28 : 0.08}
+                stroke={c.color || '#2874F0'}
                 strokeWidth={isSelected ? 3 : 1.5}
                 strokeDasharray={isSelected ? 'none' : '4 4'}
               />
@@ -165,7 +162,7 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
           })}
         </svg>
 
-        {/* Interactive Vertex Handles for Selected Counter */}
+        {/* Interactive Vertex Handles */}
         {currentVertices.map(([x, y], idx) => (
           <div
             key={idx}
@@ -176,40 +173,39 @@ export default function PolygonEditor({ counters, onCountersUpdated }: PolygonEd
             }}
             className={`absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 cursor-grab active:cursor-grabbing flex items-center justify-center transition-transform hover:scale-125 z-20 ${
               draggingVertexIndex === idx
-                ? 'bg-white border-primary scale-125 shadow-glow'
+                ? 'bg-white border-accent scale-125 shadow-glow-amber'
                 : 'bg-primary border-white'
             }`}
           >
-            <span className="text-[9px] font-mono font-bold text-background">
+            <span className="text-[9px] font-mono font-bold text-white">
               {idx + 1}
             </span>
           </div>
         ))}
 
-        {/* Helpful overlay hint */}
         <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-border text-[11px] text-slate-300 pointer-events-none flex items-center space-x-2">
-          <Move className="w-3.5 h-3.5 text-primary" />
+          <Move className="w-3.5 h-3.5 text-accent" />
           <span>Click and drag nodes 1-4 to reshape {activeCounter?.name}</span>
         </div>
       </div>
 
-      {/* Editor Footer Actions */}
+      {/* Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <button
           onClick={handleResetDefaults}
           className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-surface text-slate-300 border border-border hover:bg-surface-elevated hover:text-white transition-all"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset to Factory 3-Counter Layout</span>
+          <span>Reset Layout</span>
         </button>
 
         <button
           onClick={handleSaveAll}
           disabled={isSaving}
-          className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-glow transition-all ${
+          className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-semibold transition-all ${
             saveSuccess
-              ? 'bg-success text-background font-bold'
-              : 'bg-primary text-background hover:bg-primary-light'
+              ? 'bg-success text-white font-bold'
+              : 'bg-accent text-background hover:bg-accent-light shadow-glow-amber'
           }`}
         >
           {saveSuccess ? (
